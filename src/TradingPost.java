@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 public class TradingPost {
 	static ArrayList<int[]> portData;
+	private static int[][] rows; // the 2d prim array
 
 	public static void main(String[] args) {
 		portData = new ArrayList<int[]>();
@@ -19,7 +20,7 @@ public class TradingPost {
 		}
 		parseInput(sb);
 		int arrSize = portData.get(0).length;
-		int[][] rows = new int[portData.size()][arrSize];
+		rows = new int[portData.size()][arrSize];
 		for (int i = 0; i < portData.size(); i++) {
 			for (int j = 0; j < portData.get(i).length; j++) {
 				rows[i][j] = portData.get(i)[j];
