@@ -56,7 +56,7 @@ public class DivideAndConquer {
 				visited.addLast(node);
 				//dont go down a path with a greater total weith than our min
 				//System.out.println("ay mincost is: " + minCost );
-				//if (cost + graph[lastNode][node] < minCost)
+				if (cost + graph[lastNode][node] < minCost)
 					dft(graph, visited, cost + graph[lastNode][node]);
 				visited.removeLast();
 			}
@@ -71,11 +71,16 @@ public class DivideAndConquer {
 		
 		//lets make out test array and list	
 		int[][] testGraph = new int[][]{
-			{Integer.MAX_VALUE,7,2,5,9},
-			{Integer.MAX_VALUE,Integer.MAX_VALUE,3,5,5},
-			{Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,1,5},
-			{Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,1},
-			{Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE}
+			{0,	1,	2,	5,	7,	9,	12,	15,	17,	19},
+			{Integer.MAX_VALUE, 0,	2,	3,	4,	7,	10,	12,	14,	17},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	0,	3,	4,	7,	10,	12,	14,	16},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	Integer.MAX_VALUE,	0,	2,	3,	4,	6,	8,	10},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	0,	2,	3,	6,	8,	9},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	0,	1,	4,	7,	9},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	0,	2,	4,	7},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	0,	1,	2},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	0,	1},
+			{Integer.MAX_VALUE,Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	Integer.MAX_VALUE,	0}	
 		};
 		LinkedList<Integer> visited = new LinkedList();
         visited.add(0);
