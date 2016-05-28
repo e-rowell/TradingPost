@@ -26,7 +26,7 @@ public class TradingPost {
             }
         } else {
             try {
-                System.setIn(new FileInputStream("sample_input_size100.txt"));
+                System.setIn(new FileInputStream("sample_input_size10.txt"));
                 while (System.in.available() > 0) {
                     sb.append((char) System.in.read());
                 }
@@ -36,41 +36,54 @@ public class TradingPost {
             }
         }
 
-        parseInput(sb);
-        int arrSize = portData.get(0).length;
-        int[][] rows = new int[portData.size()][arrSize];
-        for (int i = 0; i < portData.size(); i++) {
-            for (int j = 0; j < portData.get(i).length; j++) {
-                rows[i][j] = portData.get(i)[j];
-                // System.out.println(portData.get(i)[j]);
-            }
-        }
-
+        int[][] rows = parseInput(sb);
         int[][] costArray = dynamicProg(rows);
         findDynProgPath(costArray);
-        //generateTestData();
+        // generateTestData();
     }
 
-    private static void parseInput(StringBuilder input) {
+    private static int[][] parseInput(StringBuilder input) {
+        String inputStr = input.toString();
 
-        ArrayList<String> s = new ArrayList<>();
-        for (int i = 0; i < input.length(); i++) {
-            char c = input.charAt(i);
-            if (c == '\n') {
-                int[] row = new int[s.size()];
-                for (int j = 0; j < s.size(); j++) {
-                    row[j] = Integer.parseInt("" + s.get((j)));
+        int colCount = 1;
+        // find number of columns
+        for (int i = 0; i < inputStr.indexOf('\n'); i++)
+            if (input.charAt(i) == '\t') colCount++;
+
+        int[][] rowData = new int[colCount][colCount];
+        int charIndex,
+            rowCount = 0;
+
+        while (inputStr.length() > 0) {
+            int i = 0;
+            String row = inputStr.substring(0, inputStr.indexOf('\n'));
+            int[] rowCosts = new int[colCount];
+            while (row.length() > 0) {
+                String value;
+                charIndex = row.indexOf('\t');
+
+                if (charIndex > 0) { // tab char exists
+                    value = row.substring(0, charIndex);
                 }
-                portData.add(row);
-                s.clear();
-            } else if (c == 'N' || c == '	') {
+                else { // hit end of row that had carriage return
+                    charIndex = row.indexOf('\r');
+                    value = row.substring(0, charIndex);
+                }
 
-            } else if (c == 'A') {
-                s.add("" + Integer.MAX_VALUE);
-            } else {
-                s.add("" + c);
+                if (value.equals("NA")) {
+                    rowCosts[i] = Integer.MAX_VALUE; // add sentinel
+                    i++;
+                } else {
+                    rowCosts[i] = Integer.parseInt(value); // add cost
+                    i++;
+                }
+                row = row.substring(charIndex + 1); // remove recently add cost section of the string
             }
+            rowData[rowCount] = rowCosts;
+            rowCount++;
+            inputStr = inputStr.substring(inputStr.indexOf('\n') + 1);
         }
+        return rowData;
     }
 
     private static int[][] dynamicProg(int[][] thePorts) {
@@ -113,11 +126,29 @@ public class TradingPost {
         }
 
         shortestPath.add(new int[]{0, 0}); // add starting port
+
+        // print cost array
+        StringBuilder sb = new StringBuilder();
+        for (int[] aCostArray : costArray) {
+            sb.append("[ ");
+            for (int k = 0; k < costArray[0].length; k++) {
+                if (k < costArray[0].length - 1) {
+                    if (aCostArray[k] != Integer.MAX_VALUE) sb.append(aCostArray[k]).append(", ");
+                    else sb.append("X, ");
+                } else {
+                    sb.append(aCostArray[k]).append(" ");
+                }
+            }
+            sb.append("]");
+            System.out.println(sb.toString());
+            sb.setLength(0);
+        }
+
         return shortestPath;
     }
 
     private static void generateTestData() {
-        int[] testSizes = new int[]{ 100, 200, 400, 600, 800 };
+        int[] testSizes = new int[]{ 10, 20, 50, 100, 200, 400, 600, 800 };
         int[] steps = new int[]{ 1, 2, 3 };
 
         Random rand = new Random();
@@ -140,11 +171,15 @@ public class TradingPost {
                         sb.append(0);
                         lastRandInt = 0;
                     } else {
-                        currRandInt = lastRandInt + steps[rand.nextInt(steps.length)]; //rand.nextInt(inputSize - lastRandInt) + lastRandInt;
+                        currRandInt = lastRandInt + steps[rand.nextInt(steps.length)];
                         sb.append(currRandInt);
                         lastRandInt = currRandInt;
                     }
-                    sb.append('\t');
+                    // use carriage return instead of tab at end
+                    if(j != inputSize - 1)
+                        sb.append('\t');
+                    else
+                        sb.append('\r');
                 }
                 sb.append('\n');
                 offset++;
@@ -152,8 +187,6 @@ public class TradingPost {
             // write test data to file
             try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(testFile), "UTF-8"))) {
                 writer.write(sb.toString());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
