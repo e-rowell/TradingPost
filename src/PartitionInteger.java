@@ -34,14 +34,23 @@ public class PartitionInteger {
         }
         for (int i = 0; i < n; i++) {
         	//if (a[i] != a[n-1]) {
-        	//if (!set.contains(a)) {
+        	if (containsNoDuplicate(a, i, n-1)) {
 				swap(a, i, n-1);
 				perm2(a, n-1, set);
 				swap(a, i, n-1);
-        	//}
+        	}
         }
     }  
 
+    public static boolean containsNoDuplicate(int[] arr, int start, int end) {
+    	for (int i = start; i <= end-1; i++) {
+    		if (arr[i] == arr[end]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
     // swap the characters at indices i and j
     private static void swap(int[] a, int i, int j) {
         int c = a[i];
@@ -114,7 +123,7 @@ public class PartitionInteger {
 		//HashSet<ArrayList<Character>> set = new HashSet<ArrayList<Character>>();
 		ArrayList<ArrayList<Integer>> comp = new ArrayList<ArrayList<Integer>>();
 		//get list containing composition lists
-		test.printPartitions(4,4,list, comp);
+		test.printPartitions(5,5,list, comp);
 		//for (ArrayList<Integer> temp : comp)
 			//System.out.println(temp);
 		
@@ -123,10 +132,10 @@ public class PartitionInteger {
 		testList.add(1);
 		testList.add(2);
 		int[][] testGraph = new int[][]{
-			{0,1,9,7,88},
-			{0,0,1,4,6},
-			{0,0,0,1,4},
-			{0,0,0,0,1}
+			{0,1,9,7},
+			{0,0,1,4},
+			{0,0,0,1},
+			{0,0,0,0}
 		};
 		
 		//ArrayList<Integer> shortest = new ArrayList<Integer>();
