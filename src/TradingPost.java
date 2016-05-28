@@ -4,16 +4,34 @@ import java.util.List;
 import java.util.Random;
 
 public class TradingPost {
-    private static ArrayList<int[]> portData;
 
     /**
-     * Determines whether StdIn is user or FileInputStream.
+     * Determines whether StdIn (Command line input redirection) is used or FileInputStream.
      */
     private static boolean USE_STDIN = false;
 
     public static void main(String[] args) {
-        portData = new ArrayList<>();
 
+        String[] fileNames = {"sample_input_size100.txt", "sample_input_size200.txt", "sample_input_size400.txt",
+                              "sample_input_size600.txt", "sample_input_size800.txt"};
+
+        for (String fileName : fileNames) {
+            String inputStr = readInput(fileName);
+            int[][] rowData = parseInput(inputStr);
+
+            // testBruteForce();
+            // testDivAndConq();
+            testDynProg(rowData);
+        }
+    }
+
+    /**
+     * Reads the input file into a string.
+     *
+     * @param fileName File name used for using FileInputStream.
+     * @return A string with the port data to be parsed.
+     */
+    private static String readInput(String fileName) {
         StringBuilder sb = new StringBuilder();
         if (USE_STDIN) {
             InputStreamReader cin = new InputStreamReader(System.in);
@@ -26,7 +44,7 @@ public class TradingPost {
             }
         } else {
             try {
-                System.setIn(new FileInputStream("sample_input_size100.txt"));
+                System.setIn(new FileInputStream(fileName));
                 while (System.in.available() > 0) {
                     sb.append((char) System.in.read());
                 }
@@ -36,25 +54,24 @@ public class TradingPost {
             }
         }
 
-        int[][] rows = parseInput(sb);
-        int[][] costArray = dynamicProg(rows);
-        findDynProgPath(costArray);
-        // generateTestData();
-
-
+        return sb.toString();
     }
 
-    private static int[][] parseInput(StringBuilder input) {
-        String inputStr = input.toString();
-
+    /**
+     * Assumes the CRLF ('\r''\n') line endings are used and tabs ('\t') delimit values.
+     *
+     * @param inputStr The string to parse for port data.
+     * @return 2-D array of port data.
+     */
+    private static int[][] parseInput(String inputStr) {
         int colCount = 1;
         // find number of columns
         for (int i = 0; i < inputStr.indexOf('\n'); i++)
-            if (input.charAt(i) == '\t') colCount++;
+            if (inputStr.charAt(i) == '\t') colCount++;
 
         int[][] rowData = new int[colCount][colCount];
         int charIndex,
-            rowCount = 0;
+                rowCount = 0;
 
         while (inputStr.length() > 0) {
             int i = 0;
@@ -88,23 +105,63 @@ public class TradingPost {
         return rowData;
     }
 
+    /**
+     * Tests the Dynamic Programming approach with the rowData provided and prints the results.
+     *
+     * @param rowData Port data provided by parseInput.
+     */
+    private static void testDynProg(int[][] rowData) {
+        double startTime = System.currentTimeMillis();
+
+        int[][] costArray = dynamicProg(rowData);
+        List<int[]> shortestPath = findDynProgPath(costArray);
+
+        double endTime = System.currentTimeMillis();
+        double elapsedTime = (endTime - startTime) / 1000;
+
+        System.out.println("Testing Dynamic Programming (Size " + costArray.length + "): ");
+        System.out.println("  -  Elapsed Time (s): " + elapsedTime);
+        System.out.println("  -  Minimum Cost    : " + shortestPath.get(0)[2]);
+    }
+
+    /**
+     * Calculates the minimum cost to get to each port.
+     *
+     * @param thePorts The port data.
+     * @return A cost array the shows the cost to each port.
+     */
     private static int[][] dynamicProg(int[][] thePorts) {
         int[][] costArray = new int[thePorts.length][thePorts[0].length];
         for (int k = 0; k < thePorts.length; k++) {
             costArray[k] = thePorts[k].clone();
         }
+
         for (int i = 0; i < costArray.length - 1; i++) {
-            int x = 0;
+            int currCost = 0;
             for (int j = i; j < costArray[i].length; j++) {
                 if (j == i && i != 0) {
-                    x = costArray[i - 1][j];
+                    // find min originating port
+                    int minCost = Integer.MAX_VALUE;
+                    for (int k = i - 1; k >= 0; k--) {
+                        if (costArray[k][j] < minCost) {
+                            currCost = costArray[k][j];
+                            minCost = currCost;
+                        }
+                    }
                 }
-                costArray[i][j] += x;
+                costArray[i][j] += currCost;
             }
         }
         return costArray;
     }
 
+    /**
+     * Finds the shortest path to the destination port given a cost array.
+     *
+     * @param costArray The cost array used to determine the minimum cost.
+     * @return A list of coordinates and the cost at the coordinate.
+     *          I.e. { 4, 6, 16 } would be interpreted as (4, 6) with cost 16.
+     */
     private static List<int[]> findDynProgPath(int[][] costArray) {
         List<int[]> shortestPath = new ArrayList<>();
         int colPtr = costArray.length - 1;
@@ -115,7 +172,7 @@ public class TradingPost {
 
             // add path where canoe was rented if not on first iteration.
             if (colPtr < costArray.length - 1)
-                shortestPath.add(new int[]{colPtr, colPtr});
+                shortestPath.add(new int[]{colPtr, colPtr, costArray[colPtr][colPtr]});
 
             for (int k = 0; k < colPtr; k++) {
                 if (costArray[k][colPtr] <= minOrigCost) {
@@ -123,13 +180,21 @@ public class TradingPost {
                     minOrigPort = k;
                 }
             }
-            shortestPath.add(new int[]{minOrigPort, colPtr}); // add port coordinates to path list.
+            shortestPath.add(new int[]{minOrigPort, colPtr, costArray[minOrigPort][colPtr]}); // add port coordinates to path list.
             colPtr = minOrigPort; // set colPtr to new min originating port
         }
 
-        shortestPath.add(new int[]{0, 0}); // add starting port
+        shortestPath.add(new int[]{0, 0, 0}); // add starting port
 
-        // print cost array
+        return shortestPath;
+    }
+
+    /**
+     * Prints the cost array that was used to determine the minimum cost.
+     *
+     * @param costArray The cost array to print.
+     */
+    private static void printCostArray(int[][] costArray) {
         StringBuilder sb = new StringBuilder();
         for (int[] aCostArray : costArray) {
             sb.append("[ ");
@@ -145,12 +210,13 @@ public class TradingPost {
             System.out.println(sb.toString());
             sb.setLength(0);
         }
-
-        return shortestPath;
     }
 
+    /**
+     * Generates test input files using an array of sizes and array of step sizes to derive costs.
+     */
     private static void generateTestData() {
-        int[] testSizes = new int[]{ 10, 20, 50, 100, 200, 400, 600, 800 };
+        int[] testSizes = new int[]{ 10, 20, 50, 100, 200, 400, 600, 800, 1000 };
         int[] steps = new int[]{ 1, 2, 3 };
 
         Random rand = new Random();
@@ -173,11 +239,12 @@ public class TradingPost {
                         sb.append(0);
                         lastRandInt = 0;
                     } else {
+                        // increments by a random step size greater than the previous number.
                         currRandInt = lastRandInt + steps[rand.nextInt(steps.length)];
                         sb.append(currRandInt);
                         lastRandInt = currRandInt;
                     }
-                    // use carriage return instead of tab at end
+                    // use carriage return instead of tab before the line feed
                     if(j != inputSize - 1)
                         sb.append('\t');
                     else
@@ -194,8 +261,6 @@ public class TradingPost {
             }
         }
     }
-
-
 
     public static void BruteForce(int[][] thePorts) {
 
