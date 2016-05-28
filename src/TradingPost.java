@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Scanner;
 
 public class TradingPost {
     private static ArrayList<int[]> portData;
@@ -34,10 +30,6 @@ public class TradingPost {
                 while (System.in.available() > 0) {
                     sb.append((char) System.in.read());
                 }
-                /*Scanner scanner = new Scanner(new FileInputStream("sample_input.txt"));
-                while (scanner.hasNext()) {
-                    sb.append(scanner.next());
-                }*/
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -173,62 +165,4 @@ public class TradingPost {
     public static void BruteForce(int[][] thePorts) {
 
     }
-=======
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-
-public class TradingPost {
-	static ArrayList<int[]> portData;
-	private static int[][] rows; // the 2d prim array
-
-	public static void main(String[] args) {
-		portData = new ArrayList<int[]>();
-		InputStreamReader cin = new InputStreamReader(System.in);
-		StringBuilder sb = new StringBuilder();
-		try {
-			while (cin.ready()) {
-				sb.append((char) cin.read());
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		parseInput(sb);
-		int arrSize = portData.get(0).length;
-		rows = new int[portData.size()][arrSize];
-		for (int i = 0; i < portData.size(); i++) {
-			for (int j = 0; j < portData.get(i).length; j++) {
-				rows[i][j] = portData.get(i)[j];
-				System.out.println(portData.get(i)[j]);
-			}
-		}
-	}
-
-	public static void parseInput(StringBuilder input) {
-
-		ArrayList<String> s = new ArrayList<String>();
-		for (int i = 0; i < input.length(); i++) {
-			char c = input.charAt(i);
-			if (c == '\n') {
-				int[] row = new int[s.size()];
-				for (int j = 0; j < s.size(); j++) {
-					row[j] = Integer.parseInt("" + s.get((j)));
-				}
-				portData.add(row);
-				s.clear();
-			} else if (c == 'N' || c == '	') {
-
-			} else if (c == 'A') {
-				s.add("" + Integer.MAX_VALUE);
-			} else {
-				s.add("" + c);
-			}
-		}
-	}
-
-	public static void BruteForce(int[][] thePorts) {
-
-	}
->>>>>>> 0f6086e72844604136c3bd7bafa06705ea84ced1
 }
