@@ -26,7 +26,7 @@ public class TradingPost {
             }
         } else {
             try {
-                System.setIn(new FileInputStream("sample_input_size10.txt"));
+                System.setIn(new FileInputStream("sample_input_size100.txt"));
                 while (System.in.available() > 0) {
                     sb.append((char) System.in.read());
                 }
@@ -40,6 +40,8 @@ public class TradingPost {
         int[][] costArray = dynamicProg(rows);
         findDynProgPath(costArray);
         // generateTestData();
+
+
     }
 
     private static int[][] parseInput(StringBuilder input) {
@@ -155,8 +157,8 @@ public class TradingPost {
         StringBuilder sb = new StringBuilder();
 
         for (int inputSize : testSizes) {
-            sb.setLength(0);
             File testFile = new File("sample_input_size" + inputSize + ".txt");
+            sb.setLength(0);
             int offset = 0,
                 lastRandInt = 0,
                 currRandInt;
