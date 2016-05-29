@@ -6,7 +6,7 @@ import java.util.LinkedList;
 
 public class DivideAndConquer {
 
-	private static int minCost = Integer.MAX_VALUE;
+	public static int minCost = Integer.MAX_VALUE;
 
 	LinkedList<Integer> shortest;
 
@@ -45,7 +45,7 @@ public class DivideAndConquer {
 						minCost = cost;
 					}
 
-					System.out.println(visited + " cost: " + cost + " min: " + minCost);
+					// System.out.println(visited + " cost: " + cost + " min: " + minCost);
 					cost = cost - graph[lastNode][node];
 					visited.removeLast();
 					break;
@@ -67,26 +67,29 @@ public class DivideAndConquer {
 		}
 
 
-		//System.out.println(adjecentNodes);
+		// System.out.println(adjecentNodes);
 	}
 
-	public static void testTime() {
+	public static void testTime(String fileName) {
 		TradingPost tp = new TradingPost();
-		String inputStr = tp.readInput("sample_input_size17.txt");
+		String inputStr = tp.readInput(fileName);
 		int[][] rowData = tp.parseInput(inputStr);
+
 
 		tp.generateTestData();
 		LinkedList<Integer> visited = new LinkedList();
 		visited.add(0);
+		System.out.println("Testing Divide and Conquer (Size " + rowData.length + "): ");
 		long start = System.currentTimeMillis();
 		dft(rowData, visited, 0);
 		long end = System.currentTimeMillis();
-		System.out.println(end - start);
+		System.out.println("  -  Elapsed Time (ms): " + (end - start));
+		System.out.println("  -  Minimum Cost     : " + minCost);
 	}
 
 	public static void main(String[] args) {
 		DivideAndConquer dac = new DivideAndConquer();
-		testTime();
+		testTime("sample_input_size25.txt");
 		//lets make out test array and list
 		int[][] testGraph = new int[][]{
 				{0,	1,	2,	5,	7,	9,	12,	15,	17,	19},

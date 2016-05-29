@@ -12,24 +12,26 @@ public class TradingPost {
 
     public static void main(String[] args) {
 
-        String[] fileNames = {"sample_input_size100.txt", "sample_input_size200.txt", "sample_input_size400.txt",
+        generateTestData();
+
+        String[] smallFileNames = {"sample_input_size10.txt", "sample_input_size15.txt", "sample_input_size20.txt",
+                                      "sample_input_size25.txt",};
+
+        for (String fileName : smallFileNames) {
+
+            BruteForce.testTime(fileName);
+            System.out.println();
+            DivideAndConquer.testTime(fileName);
+            System.out.println();
+        }
+
+        String[] largeFileNames = {"sample_input_size100.txt", "sample_input_size200.txt", "sample_input_size400.txt",
                 "sample_input_size600.txt", "sample_input_size800.txt"};
 
-        // String[] fileNames = {"sample_input_size100.txt"};
-        for (String fileName : fileNames) {
-            long startTime = System.currentTimeMillis();
-
+        for (String fileName : largeFileNames) {
             String inputStr = readInput(fileName);
             int[][] rowData = parseInput(inputStr);
 
-            long endTime = System.currentTimeMillis();
-
-            long elapsedTime = (endTime - startTime);
-            System.out.println("Parse input time: " + elapsedTime);
-            System.out.println();
-
-            // testBruteForce();
-            // testDivAndConq();
             testDynProg(rowData);
             System.out.println();
         }
@@ -119,8 +121,8 @@ public class TradingPost {
         long elapsedTime = endTime - startTime;
 
         System.out.println("Testing Dynamic Programming (Size " + costArray.length + "): ");
-        System.out.println("  -  Elapsed Time (s): " + elapsedTime);
-        System.out.println("  -  Minimum Cost    : " + shortestPath.get(0)[2]);
+        System.out.println("  -  Elapsed Time (ms): " + elapsedTime);
+        System.out.println("  -  Minimum Cost     : " + shortestPath.get(0)[2]);
     }
 
     /**

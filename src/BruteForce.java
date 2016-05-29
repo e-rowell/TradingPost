@@ -101,28 +101,30 @@ public class BruteForce {
 		return minCost;
 	}
 
-	public static void testTime() {
+	public static void testTime(String fileName) {
 		TradingPost tp = new TradingPost();
-		String inputStr = tp.readInput("sample_input_size50.txt");
+		String inputStr = tp.readInput(fileName);
 		int[][] rowData = tp.parseInput(inputStr);
 
 		ArrayList<Integer> shortest = new ArrayList<Integer>();
 		ArrayList<ArrayList<Integer>> comp = new ArrayList<ArrayList<Integer>>();
 		ArrayList<Integer> list = new ArrayList<Integer>();
 
+		System.out.println("Testing Brute Force (Size " + rowData.length + "): ");
 		long start = System.currentTimeMillis();
 		//set to n - 1
-		printPartitions(49,49,list, comp);
+		printPartitions(rowData.length - 1, rowData.length - 1,list, comp);
 		//actually does stuff
 		int cost = brutePath(rowData, comp, shortest);
 
 		long end = System.currentTimeMillis();
-		System.out.println(end - start);
-		System.out.println(shortest + " cost: " + cost);
+		System.out.println("  -  Elapsed Time (ms): " + (end - start));
+		// System.out.println(shortest + " cost: " + cost);
+		System.out.println("  -  Minimum Cost     : " + cost);
 	}
 
 	public static void main(String[] args) {
-		testTime();
+		testTime("sample_input_size25.txt");
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		//HashSet<ArrayList<Character>> set = new HashSet<ArrayList<Character>>();
 		ArrayList<ArrayList<Integer>> comp = new ArrayList<ArrayList<Integer>>();
