@@ -13,15 +13,25 @@ public class TradingPost {
     public static void main(String[] args) {
 
         String[] fileNames = {"sample_input_size100.txt", "sample_input_size200.txt", "sample_input_size400.txt",
-                              "sample_input_size600.txt", "sample_input_size800.txt"};
+                "sample_input_size600.txt", "sample_input_size800.txt"};
 
+        // String[] fileNames = {"sample_input_size100.txt"};
         for (String fileName : fileNames) {
+            long startTime = System.currentTimeMillis();
+
             String inputStr = readInput(fileName);
             int[][] rowData = parseInput(inputStr);
+
+            long endTime = System.currentTimeMillis();
+
+            long elapsedTime = (endTime - startTime);
+            System.out.println("Parse input time: " + elapsedTime);
+            System.out.println();
 
             // testBruteForce();
             // testDivAndConq();
             testDynProg(rowData);
+            System.out.println();
         }
     }
 
@@ -31,7 +41,7 @@ public class TradingPost {
      * @param fileName File name used for using FileInputStream.
      * @return A string with the port data to be parsed.
      */
-    private static String readInput(String fileName) {
+    public static String readInput(String fileName) {
         StringBuilder sb = new StringBuilder();
         if (USE_STDIN) {
             InputStreamReader cin = new InputStreamReader(System.in);
@@ -63,44 +73,33 @@ public class TradingPost {
      * @param inputStr The string to parse for port data.
      * @return 2-D array of port data.
      */
-    private static int[][] parseInput(String inputStr) {
-        int colCount = 1;
+    public static int[][] parseInput(String inputStr) {
+        int colCount = 1, rowCount = 0;
+
         // find number of columns
         for (int i = 0; i < inputStr.indexOf('\n'); i++)
             if (inputStr.charAt(i) == '\t') colCount++;
 
         int[][] rowData = new int[colCount][colCount];
-        int charIndex,
-                rowCount = 0;
 
         while (inputStr.length() > 0) {
             int i = 0;
-            String row = inputStr.substring(0, inputStr.indexOf('\n'));
+            String row = inputStr.substring(0, inputStr.indexOf('\n')); // get next row to parse
             int[] rowCosts = new int[colCount];
             while (row.length() > 0) {
-                String value;
-                charIndex = row.indexOf('\t');
+                // check for next tab char index, if not found, carriage return index returned.
+                int charIndex = (row.indexOf('\t') > 0) ? row.indexOf('\t') : row.indexOf('\r');
+                String value = row.substring(0, charIndex);
 
-                if (charIndex > 0) { // tab char exists
-                    value = row.substring(0, charIndex);
-                }
-                else { // hit end of row that had carriage return
-                    charIndex = row.indexOf('\r');
-                    value = row.substring(0, charIndex);
-                }
+                // check for NA to add sentinel, otherwise, parse the int
+                rowCosts[i] = (value.equals("NA")) ? Integer.MAX_VALUE : Integer.parseInt(value);
 
-                if (value.equals("NA")) {
-                    rowCosts[i] = Integer.MAX_VALUE; // add sentinel
-                    i++;
-                } else {
-                    rowCosts[i] = Integer.parseInt(value); // add cost
-                    i++;
-                }
+                i++;
                 row = row.substring(charIndex + 1); // remove recently add cost section of the string
             }
             rowData[rowCount] = rowCosts;
             rowCount++;
-            inputStr = inputStr.substring(inputStr.indexOf('\n') + 1);
+            inputStr = inputStr.substring(inputStr.indexOf('\n') + 1); // remove parsed row from input Str
         }
         return rowData;
     }
@@ -111,13 +110,13 @@ public class TradingPost {
      * @param rowData Port data provided by parseInput.
      */
     private static void testDynProg(int[][] rowData) {
-        double startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
         int[][] costArray = dynamicProg(rowData);
         List<int[]> shortestPath = findDynProgPath(costArray);
 
-        double endTime = System.currentTimeMillis();
-        double elapsedTime = (endTime - startTime) / 1000;
+        long endTime = System.currentTimeMillis();
+        long elapsedTime = endTime - startTime;
 
         System.out.println("Testing Dynamic Programming (Size " + costArray.length + "): ");
         System.out.println("  -  Elapsed Time (s): " + elapsedTime);
@@ -215,8 +214,8 @@ public class TradingPost {
     /**
      * Generates test input files using an array of sizes and array of step sizes to derive costs.
      */
-    private static void generateTestData() {
-        int[] testSizes = new int[]{ 10, 20, 50, 100, 200, 400, 600, 800, 1000 };
+    public static void generateTestData() {
+        int[] testSizes = new int[]{ 10, 15, 17, 20, 25, 50, 100, 200, 400, 600, 800 };
         int[] steps = new int[]{ 1, 2, 3 };
 
         Random rand = new Random();
