@@ -120,6 +120,7 @@ public class TradingPost {
 
     /**
      *
+     *
      * @param n
      * @param max
      * @param list
@@ -145,6 +146,7 @@ public class TradingPost {
 
     /**
      *
+     *
      * @param graph
      * @param list
      * @return
@@ -163,12 +165,13 @@ public class TradingPost {
 
     /**
      *
+     *
      * @param graph
      * @param paths
      * @param shortest
      * @return
      */
-    public static int brutePath(int[][] graph, ArrayList<ArrayList<Integer>> paths,
+    private static int brutePath(int[][] graph, ArrayList<ArrayList<Integer>> paths,
                                 ArrayList<Integer> shortest) {
 
         for (ArrayList<Integer> temp : paths) {
@@ -185,15 +188,16 @@ public class TradingPost {
 
     /**
      *
+     *
      * @param fileName
      */
-    public static void testBruteForce(String fileName) {
+    private static void testBruteForce(String fileName) {
         String inputStr = readInput(fileName);
         int[][] rowData = parseInput(inputStr);
 
-        ArrayList<Integer> shortest = new ArrayList<Integer>();
-        ArrayList<ArrayList<Integer>> comp = new ArrayList<ArrayList<Integer>>();
-        ArrayList<Integer> list = new ArrayList<Integer>();
+        ArrayList<Integer> shortest = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> comp = new ArrayList<>();
+        ArrayList<Integer> list = new ArrayList<>();
 
         System.out.println("Testing Brute Force (Size " + rowData.length + "): ");
         long start = System.currentTimeMillis();
@@ -206,6 +210,7 @@ public class TradingPost {
         System.out.println("  -  Elapsed Time (ms): " + (end - start));
         // System.out.println(shortest + " cost: " + cost);
         System.out.println("  -  Minimum Cost     : " + cost);
+        System.out.println("  -  Path Sequence    : " + shortest.toString());
     }
 
 
@@ -217,6 +222,7 @@ public class TradingPost {
 
 
     /**
+     *
      *
      * @param graph
      * @param visited
@@ -236,6 +242,7 @@ public class TradingPost {
 
     /**
      *
+     *
      * @param graph
      * @param visited
      * @param cost
@@ -244,14 +251,14 @@ public class TradingPost {
 
         //our last node is always this
         int end = graph.length - 1;
-        LinkedList<Integer> adjecentNodes = new LinkedList<Integer>();
-        //fill our list of adjecent nodes
+        LinkedList<Integer> adjacentNodes = new LinkedList<>();
+        //fill our list of adjacent nodes
         for (int i = visited.getLast() + 1; i <= end; i++) {
-            adjecentNodes.add(i);
+            adjacentNodes.add(i);
         }
 
         //check adj nodes for the end
-        for (int node : adjecentNodes) {
+        for (int node : adjacentNodes) {
             if (!visited.contains(node)) {
                 if (node == end) {
                     int lastNode = visited.getLast();
@@ -272,11 +279,11 @@ public class TradingPost {
         }
 
         //keep going
-        for(int node : adjecentNodes) {
+        for(int node : adjacentNodes) {
             if (!visited.contains(node) && node != end) {
                 int lastNode = visited.getLast();
                 visited.addLast(node);
-                //dont go down a path with a greater total weith than our min
+                //dont go down a path with a greater total weight than our min
                 //System.out.println("ay mincost is: " + minCost );
                 if (cost + graph[lastNode][node] < minCost)
                     dft(graph, visited, cost + graph[lastNode][node]);
@@ -284,11 +291,11 @@ public class TradingPost {
             }
         }
 
-
-        // System.out.println(adjecentNodes);
+        // System.out.println(adjacentNodes);
     }
 
     /**
+     *
      *
      * @param fileName
      */
@@ -304,6 +311,7 @@ public class TradingPost {
         long end = System.currentTimeMillis();
         System.out.println("  -  Elapsed Time (ms): " + (end - start));
         System.out.println("  -  Minimum Cost     : " + minCost);
+        // System.out.println("  -  Path Sequence    : ");
     }
 
 
@@ -331,6 +339,7 @@ public class TradingPost {
         System.out.println("Testing Dynamic Programming (Size " + costArray.length + "): ");
         System.out.println("  -  Elapsed Time (ms): " + elapsedTime);
         System.out.println("  -  Minimum Cost     : " + shortestPath.get(0)[2]);
+        // System.out.println("  -  Path Sequence    : " + getShortestPath(shortestPath));
     }
 
     /**
@@ -466,6 +475,26 @@ public class TradingPost {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Gets the shortest path given a sequence provided by the dynamic programming algorithm.
+     *
+     * @param pathSequence The minimum cost sequence of ports to get to the destination port.
+     * @return A string representing the sequence for the shortest path.
+     */
+    private static String getShortestPath(List<int[]> pathSequence) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[ ");
+
+        for (int i = pathSequence.size() - 1; i > 0; i -= 2) {
+            if (i == 1) sb.append(pathSequence.get(i)[1]);
+            else sb.append(pathSequence.get(i)[1]).append(", ");
+        }
+
+        sb.append(" ]");
+
+        return sb.toString();
     }
 
 
