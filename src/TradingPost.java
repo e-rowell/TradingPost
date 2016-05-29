@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -10,18 +11,22 @@ public class TradingPost {
      */
     private static boolean USE_STDIN = false;
 
+    private static int minCost = Integer.MAX_VALUE;
+
+    LinkedList<Integer> shortest;
+
     public static void main(String[] args) {
 
         generateTestData();
 
         String[] smallFileNames = {"sample_input_size10.txt", "sample_input_size15.txt", "sample_input_size20.txt",
-                                      "sample_input_size25.txt",};
+                                      "sample_input_size25.txt"};
 
         for (String fileName : smallFileNames) {
 
-            BruteForce.testTime(fileName);
+            testBruteForce(fileName);
             System.out.println();
-            DivideAndConquer.testTime(fileName);
+            testDivideAndConquer(fileName);
             System.out.println();
         }
 
@@ -43,7 +48,7 @@ public class TradingPost {
      * @param fileName File name used for using FileInputStream.
      * @return A string with the port data to be parsed.
      */
-    public static String readInput(String fileName) {
+    private static String readInput(String fileName) {
         StringBuilder sb = new StringBuilder();
         if (USE_STDIN) {
             InputStreamReader cin = new InputStreamReader(System.in);
@@ -75,7 +80,7 @@ public class TradingPost {
      * @param inputStr The string to parse for port data.
      * @return 2-D array of port data.
      */
-    public static int[][] parseInput(String inputStr) {
+    private static int[][] parseInput(String inputStr) {
         int colCount = 1, rowCount = 0;
 
         // find number of columns
@@ -105,6 +110,209 @@ public class TradingPost {
         }
         return rowData;
     }
+
+    //========================================================================================
+    //
+    // Brute Force Methods
+    //
+    //========================================================================================
+
+
+    /**
+     *
+     * @param n
+     * @param max
+     * @param list
+     * @param comp
+     */
+    private static void printPartitions(int n, int max, ArrayList<Integer> list, ArrayList<ArrayList<Integer>> comp) {
+        if (n == 0) {
+            //TODO this is where we permute the list and insert the perms
+            for (ArrayList<Integer> temp : permuteUnique(toIntArray(list)))
+                //System.out.println(temp);
+                comp.add(temp);
+            return;
+        }
+
+        for (int i = Math.min(max, n); i >= 1; i--) {
+            //string is immutable remember
+            ArrayList<Integer> temp = new ArrayList<>(list);
+            temp.add(i);
+            printPartitions(n-i, i, temp, comp);
+        }
+
+    }
+
+    /**
+     *
+     * @param graph
+     * @param list
+     * @return
+     */
+    private static int walkGraph(int[][] graph, ArrayList<Integer> list) {
+        int i = 0, j = 0, cost = 0;
+
+        for (int temp : list) {
+            cost += graph[i][j + temp];
+            //System.out.println(graph[i][j + temp]); TODO delete
+            i += temp;
+            j += temp;
+        }
+        return cost;
+    }
+
+    /**
+     *
+     * @param graph
+     * @param paths
+     * @param shortest
+     * @return
+     */
+    public static int brutePath(int[][] graph, ArrayList<ArrayList<Integer>> paths,
+                                ArrayList<Integer> shortest) {
+
+        for (ArrayList<Integer> temp : paths) {
+            int cost = walkGraph(graph, temp);
+            if (cost < minCost) {
+                minCost = cost;
+                shortest.clear();
+                shortest.addAll(temp);
+            }
+        }
+
+        return minCost;
+    }
+
+    /**
+     *
+     * @param fileName
+     */
+    public static void testBruteForce(String fileName) {
+        String inputStr = readInput(fileName);
+        int[][] rowData = parseInput(inputStr);
+
+        ArrayList<Integer> shortest = new ArrayList<Integer>();
+        ArrayList<ArrayList<Integer>> comp = new ArrayList<ArrayList<Integer>>();
+        ArrayList<Integer> list = new ArrayList<Integer>();
+
+        System.out.println("Testing Brute Force (Size " + rowData.length + "): ");
+        long start = System.currentTimeMillis();
+        //set to n - 1
+        printPartitions(rowData.length - 1, rowData.length - 1,list, comp);
+        //actually does stuff
+        int cost = brutePath(rowData, comp, shortest);
+
+        long end = System.currentTimeMillis();
+        System.out.println("  -  Elapsed Time (ms): " + (end - start));
+        // System.out.println(shortest + " cost: " + cost);
+        System.out.println("  -  Minimum Cost     : " + cost);
+    }
+
+
+    //========================================================================================
+    //
+    // Divide and Conquer Methods
+    //
+    //========================================================================================
+
+
+    /**
+     *
+     * @param graph
+     * @param visited
+     * @return
+     */
+    private int getCost(int[][] graph, LinkedList<Integer> visited) {
+        //TODO THERE IS AN EDGE CASE 2,2,2
+        int totalCost = 0;
+        int i = 0;
+        for (int node : visited) {
+            totalCost += graph[i][node];
+            System.out.print(graph[i][node] + " ");
+            i += node;
+        }
+        return totalCost;
+    }
+
+    /**
+     *
+     * @param graph
+     * @param visited
+     * @param cost
+     */
+    private static void dft(int[][] graph, LinkedList<Integer> visited, int cost) {
+
+        //our last node is always this
+        int end = graph.length - 1;
+        LinkedList<Integer> adjecentNodes = new LinkedList<Integer>();
+        //fill our list of adjecent nodes
+        for (int i = visited.getLast() + 1; i <= end; i++) {
+            adjecentNodes.add(i);
+        }
+
+        //check adj nodes for the end
+        for (int node : adjecentNodes) {
+            if (!visited.contains(node)) {
+                if (node == end) {
+                    int lastNode = visited.getLast();
+                    visited.add(node);
+                    //print the path
+                    cost += graph[lastNode][node];
+                    //min cost stuff
+                    if (cost < minCost) {
+                        minCost = cost;
+                    }
+
+                    // System.out.println(visited + " cost: " + cost + " min: " + minCost);
+                    cost = cost - graph[lastNode][node];
+                    visited.removeLast();
+                    break;
+                }
+            }
+        }
+
+        //keep going
+        for(int node : adjecentNodes) {
+            if (!visited.contains(node) && node != end) {
+                int lastNode = visited.getLast();
+                visited.addLast(node);
+                //dont go down a path with a greater total weith than our min
+                //System.out.println("ay mincost is: " + minCost );
+                if (cost + graph[lastNode][node] < minCost)
+                    dft(graph, visited, cost + graph[lastNode][node]);
+                visited.removeLast();
+            }
+        }
+
+
+        // System.out.println(adjecentNodes);
+    }
+
+    /**
+     *
+     * @param fileName
+     */
+    private static void testDivideAndConquer(String fileName) {
+        String inputStr = readInput(fileName);
+        int[][] rowData = parseInput(inputStr);
+
+        LinkedList<Integer> visited = new LinkedList();
+        visited.add(0);
+        System.out.println("Testing Divide and Conquer (Size " + rowData.length + "): ");
+        long start = System.currentTimeMillis();
+        dft(rowData, visited, 0);
+        long end = System.currentTimeMillis();
+        System.out.println("  -  Elapsed Time (ms): " + (end - start));
+        System.out.println("  -  Minimum Cost     : " + minCost);
+    }
+
+
+    //========================================================================================
+    //
+    // Dynamic Programming Methods
+    //
+    //========================================================================================
+
 
     /**
      * Tests the Dynamic Programming approach with the rowData provided and prints the results.
@@ -216,8 +424,8 @@ public class TradingPost {
     /**
      * Generates test input files using an array of sizes and array of step sizes to derive costs.
      */
-    public static void generateTestData() {
-        int[] testSizes = new int[]{ 10, 15, 17, 20, 25, 50, 100, 200, 400, 600, 800 };
+    private static void generateTestData() {
+        int[] testSizes = new int[]{ 10, 15, 20, 25, 50, 100, 200, 400, 600, 800 };
         int[] steps = new int[]{ 1, 2, 3 };
 
         Random rand = new Random();
@@ -232,7 +440,6 @@ public class TradingPost {
 
             // insert test data in StringBuilder
             for (int i = 0; i < inputSize; i++) {
-
                 for (int j = 0; j < inputSize; j++) {
                     if (j < offset) {
                         sb.append("NA");
@@ -246,10 +453,8 @@ public class TradingPost {
                         lastRandInt = currRandInt;
                     }
                     // use carriage return instead of tab before the line feed
-                    if(j != inputSize - 1)
-                        sb.append('\t');
-                    else
-                        sb.append('\r');
+                    if (j != inputSize - 1) sb.append('\t');
+                    else sb.append('\r');
                 }
                 sb.append('\n');
                 offset++;
@@ -263,7 +468,63 @@ public class TradingPost {
         }
     }
 
-    public static void BruteForce(int[][] thePorts) {
 
+    //========================================================================================
+    //
+    // Helper Methods
+    //
+    //========================================================================================
+
+
+    private static ArrayList<ArrayList<Integer>> permuteUnique(int[] num) {
+        ArrayList<ArrayList<Integer>> result = new ArrayList<>();
+        permuteUnique(num, 0, result);
+        return result;
+    }
+
+    private static void permuteUnique(int[] num, int start, ArrayList<ArrayList<Integer>> result) {
+
+        if (start >= num.length ) {
+            ArrayList<Integer> item = convertArrayToList(num);
+            result.add(item);
+        }
+
+        for (int j = start; j <= num.length-1; j++) {
+            if (containsDuplicate(num, start, j)) {
+                swap(num, start, j);
+                permuteUnique(num, start + 1, result);
+                swap(num, start, j);
+            }
+        }
+    }
+
+    private static ArrayList<Integer> convertArrayToList(int[] num) {
+        ArrayList<Integer> item = new ArrayList<>();
+        for (int h = 0; h < num.length; h++) {
+            item.add(num[h]);
+        }
+        return item;
+    }
+
+    private static boolean containsDuplicate(int[] arr, int start, int end) {
+        for (int i = start; i <= end-1; i++) {
+            if (arr[i] == arr[end]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int[] toIntArray(ArrayList<Integer> list){
+        int[] ret = new int[list.size()];
+        for(int i = 0;i < ret.length;i++)
+            ret[i] = list.get(i);
+        return ret;
+    }
+
+    private static void swap(int[] a, int i, int j) {
+        int temp = a[i];
+        a[i] = a[j];
+        a[j] = temp;
     }
 }
