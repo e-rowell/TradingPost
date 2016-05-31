@@ -4,17 +4,22 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-public class TradingPost {
+public class tcss343 {
 
-    /**
-     * Determines whether StdIn (Command line input redirection) is used or FileInputStream.
-     */
+    /** Determines whether StdIn (Command line input redirection) is used or FileInputStream. */
     private static boolean USE_STDIN = false;
 
+    /** Keeps track of the minimum cost path */
     private static int minCost = Integer.MAX_VALUE;
 
-    LinkedList<Integer> shortest;
+    /** Holds shortest path for Divide and Conquer */
+    static LinkedList<Integer> shortest = new LinkedList<>();
 
+    /**
+     * Main entry point.
+     *
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
 
         generateTestData();
@@ -24,8 +29,11 @@ public class TradingPost {
 
         for (String fileName : smallFileNames) {
 
+            minCost = Integer.MAX_VALUE;
             testBruteForce(fileName);
             System.out.println();
+
+            minCost = Integer.MAX_VALUE;
             testDivideAndConquer(fileName);
             System.out.println();
         }
@@ -34,6 +42,7 @@ public class TradingPost {
                 "sample_input_size600.txt", "sample_input_size800.txt"};
 
         for (String fileName : largeFileNames) {
+
             String inputStr = readInput(fileName);
             int[][] rowData = parseInput(inputStr);
 
@@ -111,6 +120,7 @@ public class TradingPost {
         return rowData;
     }
 
+
     //========================================================================================
     //
     // Brute Force Methods
@@ -119,44 +129,42 @@ public class TradingPost {
 
 
     /**
-     *
-     *
-     * @param n
-     * @param max
-     * @param list
-     * @param comp
+     * Splits an integer n into its combinatorial partitions. Generates
+     * unique permutations of those partitions and adds them to a list.
+     * @param n Partition sum/target integer
+     * @param max Max value in sum to partition.
+     * @param list current list of number in partition
+     * @param comp list of compositions
      */
-    private static void printPartitions(int n, int max, ArrayList<Integer> list, ArrayList<ArrayList<Integer>> comp) {
+    static void partition(int n, int max, ArrayList<Integer> list, ArrayList<ArrayList<Integer>> comp) {
         if (n == 0) {
-            //TODO this is where we permute the list and insert the perms
-            for (ArrayList<Integer> temp : permuteUnique(toIntArray(list)))
-                //System.out.println(temp);
+            // this is where we permute the list and insert the perms
+            for (ArrayList<Integer> temp : permute(toIntArray(list)))
                 comp.add(temp);
             return;
         }
 
         for (int i = Math.min(max, n); i >= 1; i--) {
-            //string is immutable remember
-            ArrayList<Integer> temp = new ArrayList<>(list);
-            temp.add(i);
-            printPartitions(n-i, i, temp, comp);
+            ArrayList<Integer> temp = new ArrayList<Integer>(list);
+            temp.add( new Integer(i) );
+            partition(n-i, i, temp, comp);
         }
 
     }
 
     /**
+     * Traveses the matrix of costs between trading posts based on a list
+     * of moves (moves are not posts)
      *
-     *
-     * @param graph
-     * @param list
-     * @return
+     * @param graph 2d array representing the graph
+     * @param list list of moves
+     * @return cost of the path taken by the moves in list
      */
     private static int walkGraph(int[][] graph, ArrayList<Integer> list) {
         int i = 0, j = 0, cost = 0;
 
         for (int temp : list) {
             cost += graph[i][j + temp];
-            //System.out.println(graph[i][j + temp]); TODO delete
             i += temp;
             j += temp;
         }
@@ -164,12 +172,13 @@ public class TradingPost {
     }
 
     /**
+     * Traveses every path in paths list and keeps track of the shortest path
+     * and its cost.
      *
-     *
-     * @param graph
-     * @param paths
-     * @param shortest
-     * @return
+     * @param graph 2d array of posts
+     * @param paths list of lists of moves
+     * @param shortest shortest path
+     * @return cost of the shortest path
      */
     private static int brutePath(int[][] graph, ArrayList<ArrayList<Integer>> paths,
                                 ArrayList<Integer> shortest) {
@@ -187,9 +196,24 @@ public class TradingPost {
     }
 
     /**
+     * Takes a list of moves and prints them as post indexes
      *
+     * @param moves list containing moves
+     */
+    private static void printMovesToNodes(ArrayList<Integer> moves) {
+        int node = 0;
+        System.out.print("[ 0 ");
+        for (int move : moves) {
+            node += move;
+            System.out.print(node + " ");
+        }
+        System.out.println("]");
+    }
+
+    /**
+     * Tests the Brute Force approach with the fileName data provided and prints the results.
      *
-     * @param fileName
+     * @param fileName the sample input to parse
      */
     private static void testBruteForce(String fileName) {
         String inputStr = readInput(fileName);
@@ -202,7 +226,7 @@ public class TradingPost {
         System.out.println("Testing Brute Force (Size " + rowData.length + "): ");
         long start = System.currentTimeMillis();
         //set to n - 1
-        printPartitions(rowData.length - 1, rowData.length - 1,list, comp);
+        partition(rowData.length - 1, rowData.length - 1,list, comp);
         //actually does stuff
         int cost = brutePath(rowData, comp, shortest);
 
@@ -210,7 +234,10 @@ public class TradingPost {
         System.out.println("  -  Elapsed Time (ms): " + (end - start));
         // System.out.println(shortest + " cost: " + cost);
         System.out.println("  -  Minimum Cost     : " + cost);
-        System.out.println("  -  Path Sequence    : " + shortest.toString());
+        System.out.print("  -  Path Sequence    : "  );
+        printMovesToNodes(shortest);
+        shortest.clear();
+        minCost = Integer.MAX_VALUE;
     }
 
 
@@ -222,96 +249,79 @@ public class TradingPost {
 
 
     /**
+     * Performs a depth first search from the start node to the end. travels
+     * all paths from the start of the graph to the end
      *
-     *
-     * @param graph
-     * @param visited
-     * @return
+     * @param graph graph to search represended as a 2d array
+     * @param marked all nodes that have been marked by the search
+     * @param cost the current cost of the traversal
      */
-    private int getCost(int[][] graph, LinkedList<Integer> visited) {
-        //TODO THERE IS AN EDGE CASE 2,2,2
-        int totalCost = 0;
-        int i = 0;
-        for (int node : visited) {
-            totalCost += graph[i][node];
-            System.out.print(graph[i][node] + " ");
-            i += node;
-        }
-        return totalCost;
-    }
-
-    /**
-     *
-     *
-     * @param graph
-     * @param visited
-     * @param cost
-     */
-    private static void dft(int[][] graph, LinkedList<Integer> visited, int cost) {
+    private static void divConq(int[][] graph, LinkedList<Integer> marked, int cost) {
 
         //our last node is always this
         int end = graph.length - 1;
-        LinkedList<Integer> adjacentNodes = new LinkedList<>();
-        //fill our list of adjacent nodes
-        for (int i = visited.getLast() + 1; i <= end; i++) {
-            adjacentNodes.add(i);
+        LinkedList<Integer> adjecent = new LinkedList<Integer>();
+        //fill our list of adjecent nodes
+        for (int i = marked.getLast() + 1; i <= end; i++) {
+            adjecent.add(i);
         }
 
         //check adj nodes for the end
-        for (int node : adjacentNodes) {
-            if (!visited.contains(node)) {
+        for (int node : adjecent) {
+            if (!marked.contains(node)) {
                 if (node == end) {
-                    int lastNode = visited.getLast();
-                    visited.add(node);
-                    //print the path
+                    int lastNode = marked.getLast();
+                    marked.addLast(node);
                     cost += graph[lastNode][node];
-                    //min cost stuff
+                    //remember min cost
                     if (cost < minCost) {
                         minCost = cost;
+                        shortest.clear();
+                        shortest.addAll(marked);
                     }
 
-                    // System.out.println(visited + " cost: " + cost + " min: " + minCost);
+                    //System.out.println(marked + " cost: " + cost + " min: " + minCost);
                     cost = cost - graph[lastNode][node];
-                    visited.removeLast();
+                    marked.removeLast();
                     break;
                 }
             }
         }
 
-        //keep going
-        for(int node : adjacentNodes) {
-            if (!visited.contains(node) && node != end) {
-                int lastNode = visited.getLast();
-                visited.addLast(node);
-                //dont go down a path with a greater total weight than our min
-                //System.out.println("ay mincost is: " + minCost );
+        //keep visiting nodes we have not marked before
+        for(int node : adjecent) {
+            if (!marked.contains(node) && node != end) {
+                int lastNode = marked.getLast();
+                marked.addLast(node);
+                //dont go down a path with a greater total weith than our min
                 if (cost + graph[lastNode][node] < minCost)
-                    dft(graph, visited, cost + graph[lastNode][node]);
-                visited.removeLast();
+                    divConq(graph, marked, cost + graph[lastNode][node]);
+                marked.removeLast();
             }
         }
 
-        // System.out.println(adjacentNodes);
     }
 
     /**
+     * Tests the Dynamic Programming approach with the fileName data provided and prints the results.
      *
-     *
-     * @param fileName
+     * @param fileName the sample input to parse
      */
     private static void testDivideAndConquer(String fileName) {
         String inputStr = readInput(fileName);
         int[][] rowData = parseInput(inputStr);
 
-        LinkedList<Integer> visited = new LinkedList();
-        visited.add(0);
+        LinkedList<Integer> marked = new LinkedList();
+        marked.add(0);
         System.out.println("Testing Divide and Conquer (Size " + rowData.length + "): ");
         long start = System.currentTimeMillis();
-        dft(rowData, visited, 0);
+        divConq(rowData, marked, 0);
         long end = System.currentTimeMillis();
         System.out.println("  -  Elapsed Time (ms): " + (end - start));
         System.out.println("  -  Minimum Cost     : " + minCost);
-        // System.out.println("  -  Path Sequence    : ");
+        System.out.println("  -  Path Sequence    : " + shortest);
+        shortest.clear();
+        minCost = Integer.MAX_VALUE;
     }
 
 
@@ -323,7 +333,7 @@ public class TradingPost {
 
 
     /**
-     * Tests the Dynamic Programming approach with the rowData provided and prints the results.
+     * Tests the Divide and Conquer approach with the rowData provided and prints the results.
      *
      * @param rowData Port data provided by parseInput.
      */
@@ -401,7 +411,6 @@ public class TradingPost {
             shortestPath.add(new int[]{minOrigPort, colPtr, costArray[minOrigPort][colPtr]}); // add port coordinates to path list.
             colPtr = minOrigPort; // set colPtr to new min originating port
         }
-
         shortestPath.add(new int[]{0, 0, 0}); // add starting port
 
         return shortestPath;
@@ -431,6 +440,34 @@ public class TradingPost {
     }
 
     /**
+     * Gets the shortest path given a sequence provided by the dynamic programming algorithm.
+     *
+     * @param pathSequence The minimum cost sequence of ports to get to the destination port.
+     * @return A string representing the sequence for the shortest path.
+     */
+    private static String getShortestPath(List<int[]> pathSequence) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[ ");
+
+        for (int i = pathSequence.size() - 1; i > 0; i -= 2) {
+            if (i == 1) sb.append(pathSequence.get(i)[1]);
+            else sb.append(pathSequence.get(i)[1]).append(", ");
+        }
+
+        sb.append(" ]");
+
+        return sb.toString();
+    }
+
+
+    //========================================================================================
+    //
+    // Helper Methods
+    //
+    //========================================================================================
+
+
+    /**
      * Generates test input files using an array of sizes and array of step sizes to derive costs.
      */
     private static void generateTestData() {
@@ -444,8 +481,8 @@ public class TradingPost {
             File testFile = new File("sample_input_size" + inputSize + ".txt");
             sb.setLength(0);
             int offset = 0,
-                lastRandInt = 0,
-                currRandInt;
+                    lastRandInt = 0,
+                    currRandInt;
 
             // insert test data in StringBuilder
             for (int i = 0; i < inputSize; i++) {
@@ -478,82 +515,101 @@ public class TradingPost {
     }
 
     /**
-     * Gets the shortest path given a sequence provided by the dynamic programming algorithm.
+     * Calls the recursive permute method.
      *
-     * @param pathSequence The minimum cost sequence of ports to get to the destination port.
-     * @return A string representing the sequence for the shortest path.
+     * @param num input array to permute
+     * @return list of lists containing permutations
      */
-    private static String getShortestPath(List<int[]> pathSequence) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[ ");
-
-        for (int i = pathSequence.size() - 1; i > 0; i -= 2) {
-            if (i == 1) sb.append(pathSequence.get(i)[1]);
-            else sb.append(pathSequence.get(i)[1]).append(", ");
-        }
-
-        sb.append(" ]");
-
-        return sb.toString();
-    }
-
-
-    //========================================================================================
-    //
-    // Helper Methods
-    //
-    //========================================================================================
-
-
-    private static ArrayList<ArrayList<Integer>> permuteUnique(int[] num) {
-        ArrayList<ArrayList<Integer>> result = new ArrayList<>();
-        permuteUnique(num, 0, result);
+    private static ArrayList<ArrayList<Integer>> permute(int[] num) {
+        ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();
+        permute(num, 0, result);
         return result;
     }
 
-    private static void permuteUnique(int[] num, int start, ArrayList<ArrayList<Integer>> result) {
+    /**
+     * Permutes a given array. Does so by swapping the start value with
+     * each other value in the array and recursively permuting on those
+     * permutations.
+     *
+     * @param num Array to permute.
+     * @param start Index to swap
+     * @param result Lists of lists containing permutations
+     */
+    private static void permute(int[] num, int start, ArrayList<ArrayList<Integer>> result) {
 
+        //base case
         if (start >= num.length ) {
-            ArrayList<Integer> item = convertArrayToList(num);
+            ArrayList<Integer> item = arrayToList(num);
             result.add(item);
         }
 
+        //swap with all values and recurse
         for (int j = start; j <= num.length-1; j++) {
-            if (containsDuplicate(num, start, j)) {
+            //same as a regular permute algo but dont do anything for duplicates
+            if (containsNoDuplicate(num, start, j)) {
                 swap(num, start, j);
-                permuteUnique(num, start + 1, result);
+                permute(num, start + 1, result);
                 swap(num, start, j);
             }
         }
     }
 
-    private static ArrayList<Integer> convertArrayToList(int[] num) {
-        ArrayList<Integer> item = new ArrayList<>();
-        for (int h = 0; h < num.length; h++) {
-            item.add(num[h]);
+    /**
+     * Converts an int array to a list.
+     *
+     * @param num input array
+     * @return List containing the same values as the array
+     */
+    private static ArrayList<Integer> arrayToList(int[] num) {
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for (int i = 0; i < num.length; i++) {
+            result.add(num[i]);
         }
-        return item;
+        return result;
     }
 
-    private static boolean containsDuplicate(int[] arr, int start, int end) {
+    /**
+     * Checks for duplicate values in an array between an index start and
+     * index end.
+     *
+     * @param arr the array
+     * @param start start index
+     * @param end end index
+     * @return true if no duplicates were found.
+     */
+    private static boolean containsNoDuplicate(int[] arr, int start, int end) {
+        boolean result = true;
         for (int i = start; i <= end-1; i++) {
             if (arr[i] == arr[end]) {
-                return false;
+                result = false;
             }
         }
-        return true;
+        return result;
     }
 
-    private static int[] toIntArray(ArrayList<Integer> list){
-        int[] ret = new int[list.size()];
-        for(int i = 0;i < ret.length;i++)
-            ret[i] = list.get(i);
-        return ret;
+    /**
+     * Converts an Integer list to an int array.
+     *
+     * @param list List of Integers
+     * @return Array of ints
+     */
+    private static int[] toIntArray(ArrayList<Integer> list) {
+        int[] result = new int[list.size()];
+        for(int i = 0;i < result.length;i++)
+            result[i] = list.get(i);
+        return result;
     }
 
-    private static void swap(int[] a, int i, int j) {
-        int temp = a[i];
-        a[i] = a[j];
-        a[j] = temp;
+    /**
+     * Swaps two values of an array.
+     *
+     * @param arr array of ints
+     * @param i index to swap
+     * @param j index to swap
+     */
+    private static void swap(int[] arr, int i, int j) {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
     }
 }
