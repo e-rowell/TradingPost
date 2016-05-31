@@ -3,11 +3,14 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-
+/**
+ * 
+ * @author Nicholas A. Hays, Ben Pasero, Ethan Rowell
+ */
 public class tcss343 {
 
     /** Determines whether StdIn (Command line input redirection) is used or FileInputStream. */
-    private static boolean USE_STDIN = false;
+    private static boolean USE_STDIN = true;
 
     /** Keeps track of the minimum cost path */
     private static int minCost = Integer.MAX_VALUE;
@@ -21,34 +24,19 @@ public class tcss343 {
      * @param args Command line arguments.
      */
     public static void main(String[] args) {
+    	 String inputStr = readInput("sample_input.txt");
+         int[][] rowData = parseInput(inputStr);
+         
+    	 minCost = Integer.MAX_VALUE;
+         testBruteForce(rowData);
+         System.out.println();
 
-        generateTestData();
+         minCost = Integer.MAX_VALUE;
+         testDivideAndConquer(rowData);
+         System.out.println(); 
 
-        String[] smallFileNames = {"sample_input_size10.txt", "sample_input_size15.txt", "sample_input_size20.txt",
-                                      "sample_input_size25.txt"};
-
-        for (String fileName : smallFileNames) {
-
-            minCost = Integer.MAX_VALUE;
-            testBruteForce(fileName);
-            System.out.println();
-
-            minCost = Integer.MAX_VALUE;
-            testDivideAndConquer(fileName);
-            System.out.println();
-        }
-
-        String[] largeFileNames = {"sample_input_size100.txt", "sample_input_size200.txt", "sample_input_size400.txt",
-                "sample_input_size600.txt", "sample_input_size800.txt"};
-
-        for (String fileName : largeFileNames) {
-
-            String inputStr = readInput(fileName);
-            int[][] rowData = parseInput(inputStr);
-
-            testDynProg(rowData);
-            System.out.println();
-        }
+         testDynProg(rowData);
+         System.out.println();
     }
 
     /**
@@ -84,7 +72,7 @@ public class tcss343 {
     }
 
     /**
-     * Assumes the CRLF ('\r''\n') line endings are used and tabs ('\t') delimit values.
+     * Assumes the CRLF ('\n') line endings are used and tabs ('\t') delimit values.
      *
      * @param inputStr The string to parse for port data.
      * @return 2-D array of port data.
@@ -95,16 +83,16 @@ public class tcss343 {
         // find number of columns
         for (int i = 0; i < inputStr.indexOf('\n'); i++)
             if (inputStr.charAt(i) == '\t') colCount++;
-
         int[][] rowData = new int[colCount][colCount];
 
         while (inputStr.length() > 0) {
             int i = 0;
-            String row = inputStr.substring(0, inputStr.indexOf('\n')); // get next row to parse
+            String row = inputStr.substring(0, inputStr.indexOf('\n') + 1); // get next row to parse
             int[] rowCosts = new int[colCount];
             while (row.length() > 0) {
+            	
                 // check for next tab char index, if not found, carriage return index returned.
-                int charIndex = (row.indexOf('\t') > 0) ? row.indexOf('\t') : row.indexOf('\r');
+                int charIndex = (row.indexOf('\t') > 0) ? row.indexOf('\t') : row.indexOf('\n');
                 String value = row.substring(0, charIndex);
 
                 // check for NA to add sentinel, otherwise, parse the int
@@ -202,10 +190,10 @@ public class tcss343 {
      */
     private static void printMovesToNodes(ArrayList<Integer> moves) {
         int node = 0;
-        System.out.print("[ 0 ");
+        System.out.print("[0");
         for (int move : moves) {
             node += move;
-            System.out.print(node + " ");
+            System.out.print(", " +node);
         }
         System.out.println("]");
     }
@@ -215,9 +203,7 @@ public class tcss343 {
      *
      * @param fileName the sample input to parse
      */
-    private static void testBruteForce(String fileName) {
-        String inputStr = readInput(fileName);
-        int[][] rowData = parseInput(inputStr);
+    private static void testBruteForce(int[][] rowData) {
 
         ArrayList<Integer> shortest = new ArrayList<>();
         ArrayList<ArrayList<Integer>> comp = new ArrayList<>();
@@ -260,14 +246,14 @@ public class tcss343 {
 
         //our last node is always this
         int end = graph.length - 1;
-        LinkedList<Integer> adjecent = new LinkedList<Integer>();
-        //fill our list of adjecent nodes
+        LinkedList<Integer> adjacent = new LinkedList<Integer>();
+        //fill our list of adjacent nodes
         for (int i = marked.getLast() + 1; i <= end; i++) {
-            adjecent.add(i);
+            adjacent.add(i);
         }
 
         //check adj nodes for the end
-        for (int node : adjecent) {
+        for (int node : adjacent) {
             if (!marked.contains(node)) {
                 if (node == end) {
                     int lastNode = marked.getLast();
@@ -289,7 +275,7 @@ public class tcss343 {
         }
 
         //keep visiting nodes we have not marked before
-        for(int node : adjecent) {
+        for(int node : adjacent) {
             if (!marked.contains(node) && node != end) {
                 int lastNode = marked.getLast();
                 marked.addLast(node);
@@ -307,11 +293,9 @@ public class tcss343 {
      *
      * @param fileName the sample input to parse
      */
-    private static void testDivideAndConquer(String fileName) {
-        String inputStr = readInput(fileName);
-        int[][] rowData = parseInput(inputStr);
+    private static void testDivideAndConquer(int[][] rowData) {
 
-        LinkedList<Integer> marked = new LinkedList();
+        LinkedList<Integer> marked = new LinkedList<Integer>();
         marked.add(0);
         System.out.println("Testing Divide and Conquer (Size " + rowData.length + "): ");
         long start = System.currentTimeMillis();
@@ -349,7 +333,7 @@ public class tcss343 {
         System.out.println("Testing Dynamic Programming (Size " + costArray.length + "): ");
         System.out.println("  -  Elapsed Time (ms): " + elapsedTime);
         System.out.println("  -  Minimum Cost     : " + shortestPath.get(0)[2]);
-        // System.out.println("  -  Path Sequence    : " + getShortestPath(shortestPath));
+        System.out.println("  -  Path Sequence    : " + getShortestPath(shortestPath));
     }
 
     /**
@@ -447,14 +431,14 @@ public class tcss343 {
      */
     private static String getShortestPath(List<int[]> pathSequence) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[ ");
-
-        for (int i = pathSequence.size() - 1; i > 0; i -= 2) {
+        sb.append("[");
+        for (int i = pathSequence.size() - 1; i >= 0; i -= 2) {
+        	//System.out.println(pathSequence.get(i)[1]);
             if (i == 1) sb.append(pathSequence.get(i)[1]);
             else sb.append(pathSequence.get(i)[1]).append(", ");
         }
-
-        sb.append(" ]");
+        sb.append(", " + pathSequence.get(0)[1]);
+        sb.append("]");
 
         return sb.toString();
     }
